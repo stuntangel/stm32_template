@@ -1,5 +1,10 @@
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
+#define LED_PORT GPIOC 
+#define LED_PIN_0  GPIO_PIN_0
+#define LED_PIN_1  GPIO_PIN_1
+#define LED_PIN_2  GPIO_PIN_2
+#define LED_PIN_3  GPIO_PIN_3
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 
@@ -41,56 +46,39 @@ void SystemClock_Config(void);
   * @brief  The application entry point.
   * @retval int
   */
-unsigned char BinaryCount(unsigned char count) {
+Byte_t BinaryCount(Byte_t count) {
   // 
-	const unsigned long int 0xFFFFFFFF;
+	const unsigned long int clockIterBuffer = 20000000;
 	/* 0xFFFFFFFF is maximum value for an unsigned long int
 		 acts as a large value to count to, to spend time on execution cycles
 		 such that a human can see the led light up
+		 0x00FFFFFF was chosen as clock is at 80MHz, so for loop approx 0.2 secs
 	*/
-	const unsigned char countTo = 15; // To binary count through 4 LEDs, 16 states are needed (15 + 0 = 16)
+  for(unsigned long int i = 0; i < clockIterBuffer; i++) { // wait delayed time
+		; // nop
+	}
+	
+	const Byte_t countTo = 15; // To binary count through 4 LEDs, 16 states are needed (15 + 0 = 16)
 	if (count == countTo) {
 		count = 0; // cycle back to 0 after reaching maximum value to count to
 	}
 	else {
-		count++; // count up until maximum value is reached
+		count+=1; // count up until maximum value is reached
 	}
 	return count;
 }
 
-void LedAssign(unsigned char count) {
-	const unsigned char = maskFirstLED = 0b00000001;
-	const unsigned char = maskSecondLED = maskFirstLED >> 1;
-	const unsigned char = maskThirdLED = maskFirstLED >> 2;
-	const unsigned char = maskFourthLED = maskFirstLED >> 3;
-
-	if (maskFirstLED & count) == maskFirstLED {
-		GPIOC->BSSR = (GPIO_PIN_1); // turns on LED 1
-	}
-	else {
-		GPIOC->BRR = (GPIO_PIN_1); // turns off LED 1
-	}
-	
-	if (maskSecondLED & count) == maskSecondLED {
-		GPIOC->BSSR = (GPIO_PIN_2); //turns on LED 2
-	}
-	else {
-		GPIOC->BRR = (GPIO_PIN_2); // turns off LED 2
-	}
-
-	if (maskThirdLED & count) == maskThirdLED {
-		GPIOC->BSSR = (GPIO_PIN_3); //turns on LED 3
-	}
-	else {
-		GPIOC->BRR = (GPIO_PIN_3); // turns off LED 3
-	}
-
-	if (maskFourthLED & count) == maskFourthLED {
-		GPIOC->BSSR = (GPIO_PIN_4); //turns on LED 4
-	}
-	else {
-		GPIOC->BRR = (GPIO_PIN_4); // turns off LED 4
-	}
+void LedAssign(Byte_t count) {
+	/*
+		if any bits of count are a 0, reset the bit by complementing it and shifting it by 16
+		set all bits in the first 16 if value is 1
+	*/
+	LED_PORT->BRR = (LED_PIN_0 | LED_PIN_1 | LED_PIN_2 | LED_PIN_3);
+	if(count & 0x1) LED_PORT->BSRR = (LED_PIN_0);
+	if(count & 0x2) LED_PORT->BSRR = (LED_PIN_1);
+	if(count & 0x4) LED_PORT->BSRR = (LED_PIN_2);
+	if(count & 0x8) LED_PORT->BSRR = (LED_PIN_3);
+	//	GPIOC->BSRR = ((~count >> 16) | count);
 }
 
 int main(void) {
@@ -115,21 +103,46 @@ int main(void) {
   /* USER CODE END SysInit */
 
   /* Initialize all configured peripherals */
-  /* USER CODE BEGIN 2 */
+
+
+	RCC->AHB2ENR   |=  (RCC_AHB2ENR_GPIOCEN);
+  GPIOC->MODER   &= ~(GPIO_MODER_MODE0 | GPIO_MODER_MODE1 | GPIO_MODER_MODE2 | GPIO_MODER_MODE3); 
+  GPIOC->MODER   |=  (GPIO_MODER_MODE0_0 | GPIO_MODER_MODE1_0 | GPIO_MODER_MODE2_0 | GPIO_MODER_MODE3_0);
+  GPIOC->OTYPER  &= ~(GPIO_OTYPER_OT0 | GPIO_OTYPER_OT1 | GPIO_OTYPER_OT2 | GPIO_OTYPER_OT3);
+  GPIOC->PUPDR   &= ~(GPIO_PUPDR_PUPD0 | GPIO_PUPDR_PUPD1 | GPIO_PUPDR_PUPD2 | GPIO_PUPDR_PUPD3);        
+  GPIOC->OSPEEDR |=  ((3 << GPIO_OSPEEDR_OSPEED0_Pos) |
+                      (3 << GPIO_OSPEEDR_OSPEED1_Pos) |
+											(3 << GPIO_OSPEEDR_OSPEED2_Pos) |
+											(3 << GPIO_OSPEEDR_OSPEED3_Pos));
+  GPIOC->BRR = (GPIO_PIN_0 | GPIO_PIN_1 | GPIO_PIN_2 | GPIO_PIN_3); // preset PC0, PC1, PC2, PC3 to 0
+	
+	/* USER CODE BEGIN 2 */
 
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   /* USER CODE END 3 */
-	unsigned char count = 0; // start counting from 0;
+	//Byte_t count = 0; // start counting from 0;
+
 	while(1) {
 		/*
-			counts in binary using 4 LEDs 
+			counts in binary using 4 LEDs
 		*/
-		LedAssign(count); // turns on and off appropriate LEDs
-		count = BinaryCount(count); // jump to next count with a time delay in between
+		for (Byte_t count = 0; count < 16; count++) { 
+			LED_PORT->BRR = (LED_PIN_0 | LED_PIN_1 | LED_PIN_2 | LED_PIN_3);	
+			if(count & 0x1) LED_PORT->BSRR = (LED_PIN_0);
+			if(count & 0x2) LED_PORT->BSRR = (LED_PIN_1);
+			if(count & 0x4) LED_PORT->BSRR = (LED_PIN_2);
+			if(count & 0x8) LED_PORT->BSRR = (LED_PIN_3);
+			for(long int i =0; i < 120000; i++) {
+				; 
+			} 
+		}
+		//	LedAssign(count); // turns on and off appropriate LEDs
+		//count = BinaryCount(count); // jump to next count with a time delay in between
 	}
+	return 0;
 }
 
 /**

@@ -5,3 +5,4 @@ STM32_Programmer_CLI -l usb
 note to self: use the usb port on the right side of my computer! /dev/ttyACM0
 It is necessary to add user to dialout group in linux
 Flash: DISPLAY=:1 steam-run /home/ryan/STMicroelectronics/STM32Cube/STM32CubeProgrammer/bin/STM32CubeProgrammer
+arm-none-eabi-objcopy so.elf -O binary so.bin

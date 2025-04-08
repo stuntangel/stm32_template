@@ -54,25 +54,23 @@ void Error_Handler(void);
 
 /* USER CODE BEGIN EFP */
 
+typedef unsigned char Byte_t;
+unsigned char BinaryCount (unsigned char);
+void LedAssign(unsigned char);
+
+	
 /* USER CODE END EFP */
 
 /* Private defines -----------------------------------------------------------*/
 #define Button_Pin GPIO_PIN_13
 #define Button_GPIO_Port GPIOC
-extern UART_HandleTypeDef hlpuart1;
-extern CRC_HandleTypeDef CrcHandle;
 
+/* USER CODE BEGIN Private defines */
 
-/* Exported types ------------------------------------------------------------*/
-/* Exported constants --------------------------------------------------------*/
-/* Exported macro ------------------------------------------------------------*/
-/* Exported functions ------------------------------------------------------- */
-
-#endif /* __MAIN_H */
-
-/************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/
-
+/* USER CODE END Private defines */
 
 #ifdef __cplusplus
 }
+#endif
+
 #endif /* __MAIN_H */
