@@ -1,10 +1,12 @@
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
-#define LED_PORT GPIOC 
+#include <math.h>
+#define LED_PORT GPIOC
 #define LED_PIN_0  GPIO_PIN_0
 #define LED_PIN_1  GPIO_PIN_1
 #define LED_PIN_2  GPIO_PIN_2
 #define LED_PIN_3  GPIO_PIN_3
+typedef int32_t var_type;
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 
@@ -33,6 +35,7 @@
 
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
+var_type TestFunction(var_type num);
 /* USER CODE BEGIN PFP */
 
 /* USER CODE END PFP */
@@ -47,7 +50,7 @@ void SystemClock_Config(void);
   * @retval int
   */
 Byte_t BinaryCount(Byte_t count) {
-  // 
+  //
 	const unsigned long int clockIterBuffer = 20000000;
 	/* 0xFFFFFFFF is maximum value for an unsigned long int
 		 acts as a large value to count to, to spend time on execution cycles
@@ -81,8 +84,26 @@ void LedAssign(Byte_t count) {
 	//	GPIOC->BSRR = ((~count >> 16) | count);
 }
 
+var_type TestFunction(var_type num) {
+	var_type test_var;  				// local variable
+ 
+  GPIOC->BSRR = (GPIO_PIN_1);             // turn on PC1
+  /* USER insert test function here e.g. test_var = num; */
+
+	test_var = num;
+
+	
+	GPIOC->BRR = (GPIO_PIN_1);              // turn off PC1
+	//test_var = num;
+  
+  
+  return test_var;
+}
+
+
 int main(void) {
-  /* USER CODE BEGIN 1 */
+	var_type main_var;
+	/* USER CODE BEGIN 1 */
 
   /* USER CODE END 1 */
 
@@ -106,10 +127,10 @@ int main(void) {
 
 
 	RCC->AHB2ENR   |=  (RCC_AHB2ENR_GPIOCEN);
-  GPIOC->MODER   &= ~(GPIO_MODER_MODE0 | GPIO_MODER_MODE1 | GPIO_MODER_MODE2 | GPIO_MODER_MODE3); 
+  GPIOC->MODER   &= ~(GPIO_MODER_MODE0 | GPIO_MODER_MODE1 | GPIO_MODER_MODE2 | GPIO_MODER_MODE3);
   GPIOC->MODER   |=  (GPIO_MODER_MODE0_0 | GPIO_MODER_MODE1_0 | GPIO_MODER_MODE2_0 | GPIO_MODER_MODE3_0);
   GPIOC->OTYPER  &= ~(GPIO_OTYPER_OT0 | GPIO_OTYPER_OT1 | GPIO_OTYPER_OT2 | GPIO_OTYPER_OT3);
-  GPIOC->PUPDR   &= ~(GPIO_PUPDR_PUPD0 | GPIO_PUPDR_PUPD1 | GPIO_PUPDR_PUPD2 | GPIO_PUPDR_PUPD3);        
+  GPIOC->PUPDR   &= ~(GPIO_PUPDR_PUPD0 | GPIO_PUPDR_PUPD1 | GPIO_PUPDR_PUPD2 | GPIO_PUPDR_PUPD3);
   GPIOC->OSPEEDR |=  ((3 << GPIO_OSPEEDR_OSPEED0_Pos) |
                       (3 << GPIO_OSPEEDR_OSPEED1_Pos) |
 											(3 << GPIO_OSPEEDR_OSPEED2_Pos) |
@@ -124,21 +145,28 @@ int main(void) {
   /* USER CODE BEGIN WHILE */
   /* USER CODE END 3 */
 	//Byte_t count = 0; // start counting from 0;
-
-	while(1) {
-		/*
-			counts in binary using 4 LEDs
-		*/
-		for (Byte_t count = 0; count < 16; count++) { 
-			LED_PORT->BRR = (LED_PIN_0 | LED_PIN_1 | LED_PIN_2 | LED_PIN_3);	
+	for (Byte_t loopsCounted = 0; loopsCounted < 4; loopsCounted++) {
+		for (Byte_t count = 0; count < 16; count++) {
+			LED_PORT->BRR = (LED_PIN_0 | LED_PIN_1 | LED_PIN_2 | LED_PIN_3);
 			if(count & 0x1) LED_PORT->BSRR = (LED_PIN_0);
 			if(count & 0x2) LED_PORT->BSRR = (LED_PIN_1);
 			if(count & 0x4) LED_PORT->BSRR = (LED_PIN_2);
 			if(count & 0x8) LED_PORT->BSRR = (LED_PIN_3);
-			for(long int i =0; i < 120000; i++) {
-				; 
-			} 
+			for(long int i =0; i < 40000; i++) {
+				;
+			}
 		}
+	}
+
+	while(1) {
+		
+		/*
+			counts in binary using 4 LEDs
+		*/
+		GPIOC->BSRR = (GPIO_PIN_0);             // turn on PC0
+		main_var = TestFunction(15);            // call test function
+		GPIOC->BRR = (GPIO_PIN_0);             // turn on PC0
+		main_var++;
 		//	LedAssign(count); // turns on and off appropriate LEDs
 		//count = BinaryCount(count); // jump to next count with a time delay in between
 	}
